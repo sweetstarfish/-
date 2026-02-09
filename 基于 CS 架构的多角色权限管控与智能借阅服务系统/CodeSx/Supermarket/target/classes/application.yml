@@ -1,0 +1,31 @@
+server:
+  port: 4399
+
+#数据库配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/smbms_db?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+    username: root
+    password: 040811
+
+#配置mybatis实体和xml映射
+mybatis:
+  mapper-locations: classpath:mapper/*.xml  # mapper XML文件路径
+  configuration:
+    map-underscore-to-camel-case: true      # 开启驼峰命名转换
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 日志实现
+
+# JWT配置
+jwt:
+  secret: supermarket-jwt-secret-key-2024
+  expiration: 86400000  # 24小时，单位：毫秒
+
+# 日志配置
+logging:
+  level:
+    com.cjdx.supermarket: DEBUG
+    org.springframework.web: DEBUG
+    org.mybatis: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" 

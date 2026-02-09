@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cjdx.supermarket.mapper.ProviderMapper">
+
+    <!-- 查询所有供应商 -->
+    <select id="selectAllProviders" resultType="com.cjdx.supermarket.entity.Provider">
+        SELECT * FROM smbms_provider ORDER BY id DESC
+    </select>
+
+    <!-- 分页查询供应商列表 -->
+    <select id="selectProvidersByPage" resultType="com.cjdx.supermarket.entity.Provider">
+        SELECT * FROM smbms_provider
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    proCode LIKE CONCAT('%', #{keyword}, '%') OR
+                    proName LIKE CONCAT('%', #{keyword}, '%') OR
+                    proContact LIKE CONCAT('%', #{keyword}, '%') OR
+                    proPhone LIKE CONCAT('%', #{keyword}, '%') OR
+                    proAddress LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        <choose>
+            <when test="sortField != null and sortField != ''">
+                ORDER BY ${sortField} ${sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY id DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计供应商总数 -->
+    <select id="countProviders" resultType="long">
+        SELECT COUNT(*) FROM smbms_provider
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    proCode LIKE CONCAT('%', #{keyword}, '%') OR
+                    proName LIKE CONCAT('%', #{keyword}, '%') OR
+                    proContact LIKE CONCAT('%', #{keyword}, '%') OR
+                    proPhone LIKE CONCAT('%', #{keyword}, '%') OR
+                    proAddress LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询供应商 -->
+    <select id="selectProviderById" parameterType="long" resultType="com.cjdx.supermarket.entity.Provider">
+        SELECT * FROM smbms_provider WHERE id = #{providerId}
+    </select>
+
+    <!-- 根据编码查询供应商 -->
+    <select id="selectProviderByCode" parameterType="string" resultType="com.cjdx.supermarket.entity.Provider">
+        SELECT * FROM smbms_provider WHERE proCode = #{proCode}
+    </select>
+
+    <!-- 插入供应商 -->
+    <insert id="insertProvider" parameterType="com.cjdx.supermarket.entity.Provider" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO smbms_provider (
+            proCode, proName, proDesc, proContact, proPhone,
+            proAddress, proFax, createdBy, creationDate, modifyBy, modifyDate
+        ) VALUES (
+            #{proCode}, #{proName}, #{proDesc}, #{proContact}, #{proPhone},
+            #{proAddress}, #{proFax}, #{createdBy}, #{creationDate}, #{modifyBy}, #{modifyDate}
+        )
+    </insert>
+
+    <!-- 更新供应商 -->
+    <update id="updateProvider" parameterType="com.cjdx.supermarket.entity.Provider">
+        UPDATE smbms_provider
+        SET proCode = #{proCode},
+            proName = #{proName},
+            proDesc = #{proDesc},
+            proContact = #{proContact},
+            proPhone = #{proPhone},
+            proAddress = #{proAddress},
+            proFax = #{proFax},
+            modifyBy = #{modifyBy},
+            modifyDate = #{modifyDate}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除供应商 -->
+    <delete id="deleteProvider" parameterType="long">
+        DELETE FROM smbms_provider WHERE id = #{id}
+    </delete>
+
+</mapper>

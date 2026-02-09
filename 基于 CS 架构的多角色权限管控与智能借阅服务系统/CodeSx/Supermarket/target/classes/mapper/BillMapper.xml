@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cjdx.supermarket.mapper.BillMapper">
+
+    <!-- 查询所有账单（基础查询） -->
+    <select id="selectAllBills" resultType="com.cjdx.supermarket.entity.Bill">
+        SELECT * FROM smbms_bill ORDER BY creationDate DESC
+    </select>
+
+    <!-- 根据ID查询账单 -->
+    <select id="selectBillById" parameterType="long" resultType="com.cjdx.supermarket.entity.Bill">
+        SELECT * FROM smbms_bill WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有账单（关联供应商信息） -->
+    <select id="selectBillsWithProvider" resultType="com.cjdx.supermarket.entity.Bill">
+        SELECT
+            b.*,
+            p.proName as providerName
+        FROM smbms_bill b
+                 LEFT JOIN smbms_provider p ON b.providerId = p.id
+        ORDER BY b.creationDate DESC
+    </select>
+
+    <!-- 分页查询账单列表（包含供应商信息） -->
+    <select id="selectBillsByPage" resultType="com.cjdx.supermarket.entity.Bill">
+        SELECT
+            b.*,
+            p.proName as providerName
+        FROM smbms_bill b
+                 LEFT JOIN smbms_provider p ON b.providerId = p.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    b.billCode LIKE CONCAT('%', #{keyword}, '%') OR
+                    b.productName LIKE CONCAT('%', #{keyword}, '%') OR
+                    b.productDesc LIKE CONCAT('%', #{keyword}, '%') OR
+                    p.proName LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        <choose>
+            <when test="sortField != null and sortField != ''">
+                ORDER BY ${sortField} ${sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY b.creationDate DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计账单总数 -->
+    <select id="countBills" resultType="long">
+        SELECT COUNT(*)
+        FROM smbms_bill b
+                 LEFT JOIN smbms_provider p ON b.providerId = p.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    b.billCode LIKE CONCAT('%', #{keyword}, '%') OR
+                    b.productName LIKE CONCAT('%', #{keyword}, '%') OR
+                    b.productDesc LIKE CONCAT('%', #{keyword}, '%') OR
+                    p.proName LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 统计指定日期的账单数量 -->
+    <select id="countBillsByDate" resultType="int">
+        SELECT COUNT(*)
+        FROM smbms_bill
+        WHERE DATE(creationDate) = #{date}
+    </select>
+
+    <!-- 统计指定日期范围的账单数量 -->
+    <select id="countBillsByDateRange" resultType="int">
+        SELECT COUNT(*)
+        FROM smbms_bill
+        WHERE DATE(creationDate) BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 统计指定日期范围的账单金额 -->
+    <select id="sumBillsAmountByDateRange" resultType="double">
+        SELECT COALESCE(SUM(totalPrice), 0)
+        FROM smbms_bill
+        WHERE DATE(creationDate) BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 获取最近7天的账单数量统计 -->
+    <select id="getBillsCountByLast7Days" resultType="map">
+        SELECT 
+            DATE(creationDate) as date,
+            COUNT(*) as count
+        FROM smbms_bill
+        WHERE creationDate >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(creationDate)
+        ORDER BY date
+    </select>
+
+    <!-- 获取最近7天的账单金额统计 -->
+    <select id="getBillsAmountByLast7Days" resultType="map">
+        SELECT 
+            DATE(creationDate) as date,
+            COALESCE(SUM(totalPrice), 0) as amount
+        FROM smbms_bill
+        WHERE creationDate >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(creationDate)
+        ORDER BY date
+    </select>
+
+    <!-- 根据编码查询账单 -->
+    <select id="selectBillByCode" parameterType="string" resultType="com.cjdx.supermarket.entity.Bill">
+        SELECT * FROM smbms_bill WHERE billCode = #{billCode}
+    </select>
+
+    <!-- 统计供应商关联的账单数量 -->
+    <select id="countBillsByProvider" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM smbms_bill WHERE providerId = #{providerId}
+    </select>
+
+    <!-- 插入账单 -->
+    <insert id="insertBill" parameterType="com.cjdx.supermarket.entity.Bill" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO smbms_bill (
+            billCode, productName, productDesc, productUnit, productCount,
+            totalPrice, isPayment, providerId, createdBy, creationDate,
+            modifyBy, modifyDate
+        ) VALUES (
+            #{billCode}, #{productName}, #{productDesc}, #{productUnit}, #{productCount},
+            #{totalPrice}, #{isPayment}, #{providerId}, #{createdBy}, #{creationDate},
+            #{modifyBy}, #{modifyDate}
+        )
+    </insert>
+
+    <!-- 更新账单 -->
+    <update id="updateBill" parameterType="com.cjdx.supermarket.entity.Bill">
+        UPDATE smbms_bill
+        SET billCode = #{billCode},
+            productName = #{productName},
+            productDesc = #{productDesc},
+            productUnit = #{productUnit},
+            productCount = #{productCount},
+            totalPrice = #{totalPrice},
+            isPayment = #{isPayment},
+            providerId = #{providerId},
+            modifyBy = #{modifyBy},
+            modifyDate = #{modifyDate}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除账单 -->
+    <delete id="deleteBill" parameterType="long">
+        DELETE FROM smbms_bill WHERE id = #{id}
+    </delete>
+
+</mapper>

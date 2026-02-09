@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cjdx.supermarket.mapper.UserMapper">
+
+    <select id="selectAllUsers" resultType="com.cjdx.supermarket.entity.User">
+        SELECT * FROM smbms_user
+    </select>
+
+    <select id="selectNonAdminUsers" resultType="com.cjdx.supermarket.entity.User">
+        SELECT * FROM smbms_user WHERE userCode != 'admin' ORDER BY id
+    </select>
+
+    <!-- 分页查询用户列表 -->
+    <select id="selectUsersByPage" resultType="com.cjdx.supermarket.entity.User">
+        SELECT * FROM smbms_user 
+        WHERE userCode != 'admin'
+        <if test="keyword != null and keyword != ''">
+            AND (
+                userCode LIKE CONCAT('%', #{keyword}, '%') OR
+                userName LIKE CONCAT('%', #{keyword}, '%') OR
+                phone LIKE CONCAT('%', #{keyword}, '%') OR
+                address LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <choose>
+            <when test="sortField != null and sortField != ''">
+                ORDER BY ${sortField} ${sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY id DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计用户总数 -->
+    <select id="countUsers" resultType="long">
+        SELECT COUNT(*) FROM smbms_user 
+        WHERE userCode != 'admin'
+        <if test="keyword != null and keyword != ''">
+            AND (
+                userCode LIKE CONCAT('%', #{keyword}, '%') OR
+                userName LIKE CONCAT('%', #{keyword}, '%') OR
+                phone LIKE CONCAT('%', #{keyword}, '%') OR
+                address LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+    </select>
+
+    <select id="selectByUserCode" resultType="com.cjdx.supermarket.entity.User">
+        SELECT * FROM smbms_user WHERE userCode = #{userCode}
+    </select>
+
+    <select id="selectByUsername" resultType="com.cjdx.supermarket.entity.User">
+        SELECT * FROM smbms_user WHERE userCode = #{username}
+    </select>
+
+    <select id="selectById" resultType="com.cjdx.supermarket.entity.User">
+        SELECT * FROM smbms_user WHERE id = #{id}
+    </select>
+
+    <insert id="insertUser" parameterType="com.cjdx.supermarket.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO smbms_user (
+            userCode, userName, userPassword, salt, status, gender, 
+            birthday, phone, address, headUrl, userRole, 
+            createdBy, creationDate, modifyBy, modifyDate
+        ) VALUES (
+            #{userCode}, #{userName}, #{userPassword}, #{salt}, #{status}, #{gender},
+            #{birthday}, #{phone}, #{address}, #{headUrl}, #{userRole},
+            #{createdBy}, #{creationDate}, #{modifyBy}, #{modifyDate}
+        )
+    </insert>
+
+    <update id="updateUser" parameterType="com.cjdx.supermarket.entity.User">
+        UPDATE smbms_user 
+        SET userName = #{userName},
+            phone = #{phone},
+            address = #{address},
+            gender = #{gender},
+            birthday = #{birthday},
+            modifyBy = #{modifyBy},
+            modifyDate = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE smbms_user 
+        SET userPassword = #{password},
+            modifyBy = #{userId},
+            modifyDate = NOW()
+        WHERE id = #{userId}
+    </update>
+
+    <update id="updateUserStatus">
+        UPDATE smbms_user 
+        SET status = #{status},
+            modifyDate = NOW()
+        WHERE id = #{userId}
+    </update>
+
+</mapper>
